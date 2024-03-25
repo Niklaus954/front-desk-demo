@@ -70,7 +70,7 @@ const Chart:any =()=>{
             .getDefaultAxisY()
             .setTitle('mV')
             .setInterval({ start: -1600, end: 1000, stopAxisAfter: false })
-            .setScrollStrategy(AxisScrollStrategies.expansion)
+            .setScrollStrategy(AxisScrollStrategies.expansion) 
 
         chart
             .getDefaultAxisX()
