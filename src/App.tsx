@@ -23,8 +23,18 @@ import '@ionic/react/css/display.css';
 /* Theme variables */
 import './theme/variables.css';
 import React from "react";
+import {GtcClient} from "./gtc/GtcClient";
+import {ServiceTypeEnum} from "./gtc/domain/enums/ServiceTypeEnum";
 
 setupIonicReact();
+
+// GtcClient.init("http://localhost:9001").then(async () => {
+//   console.log(await GtcClient.getDllVer(ServiceTypeEnum.MGT));
+//   console.log(await GtcClient.getCardNumber(ServiceTypeEnum.MGT));
+//   GtcClient.listenEventMsg(ServiceTypeEnum.MGT, 0, result => console.log(result));
+//   GtcClient.listenDataGram(ServiceTypeEnum.MGT, 0, result => console.log(result));
+//   await GtcClient.launch(ServiceTypeEnum.MGT, 0);
+// }).catch(e => console.log(e));
 
 const App: React.FC = () => (
   <IonApp>
