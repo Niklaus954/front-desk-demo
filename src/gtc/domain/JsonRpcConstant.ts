@@ -2,6 +2,7 @@
  * rpc通讯参数常量
  */
 export class JsonRpcConstant {
+    public static readonly SLAVE_INST_ID = "slaveInstId";
     public static readonly CTRL_INDEX = "ctrlIndex";
     public static readonly SERVICE_TYPE = "serviceType";
     public static readonly CHANNEL_HANDLE = "channelHandle";

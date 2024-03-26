@@ -9,6 +9,8 @@ import {GtcCallBackMsg} from "./domain/GtcCallBackMsg";
 import {ReadDataDO} from "./domain/ReadDataDO";
 import {PubSubUtil} from "./utils/PubSubUtil";
 import {SubKeyEnum} from "./utils/enums/SubKeyEnum";
+import {NodeInfo} from "./domain/NodeInfo";
+import {IdGenerator} from "./utils/IdGenerator";
 
 /**
  * 远程gtc服务socketIO实现
@@ -17,7 +19,37 @@ class GtcServiceSocketIOImpl implements IGtcService {
     private socket;
     private connectStatus: ConnectStatusEnum = ConnectStatusEnum.DISCONNECT;
 
+    // Call Reply回调函数映射
     private callbackMap = {};
+
+    constructor() {
+        setInterval(() => {
+            if (this.connectStatus == ConnectStatusEnum.DISCONNECT) {
+                PubSubUtil.publish(SubKeyEnum.NODE_INFO_LIST_KEY, [{
+                    instId: '127.0.0.1',
+                    nodeStatus: this.connectStatus,
+                }]);
+                return;
+            }
+            this.call({
+                id: IdGenerator.generate(),
+                method: JsonRpcMethodEnum.CALL_GET_NODE_INFO,
+                params: {},
+                timestamp: Date.now(),
+                event: JsonRpcEventEnum.CALL
+            }).then(result => {
+                PubSubUtil.publish(SubKeyEnum.NODE_INFO_LIST_KEY, [{
+                    instId: '127.0.0.1',
+                    nodeStatus: this.connectStatus,
+                }, ...result.map(item => {
+                    return {
+                        instId: item,
+                        nodeStatus: ConnectStatusEnum.CONNECTED,
+                    };
+                })]);
+            });
+        }, 5000);
+    }
 
     init(url: string): Promise<boolean> {
         return new Promise((resolve, reject) => {
@@ -80,12 +112,12 @@ class GtcServiceSocketIOImpl implements IGtcService {
 
     event(response: JsonRpcResponse<OutMsg<GtcCallBackMsg>, any>) {
         // 处理事件
-        PubSubUtil.publish(SubKeyEnum.GTC_EVENT_KEY + ":" + response.result.serviceType + ":" + response.result.ctrlIndex, response.result.data);
+        PubSubUtil.publish(response.slaveInstId + ":" + SubKeyEnum.GTC_EVENT_KEY + ":" + response.result.serviceType + ":" + response.result.ctrlIndex, response.result.data);
     }
 
     dataGram(response: JsonRpcResponse<OutMsg<ReadDataDO>, any>) {
         // 处理数据流
-        PubSubUtil.publish(SubKeyEnum.GTC_DATA_GRAM_KEY + ":" + response.result.serviceType + ":" + response.result.ctrlIndex, response.result.data);
+        PubSubUtil.publish(response.slaveInstId + ":" + SubKeyEnum.GTC_DATA_GRAM_KEY + ":" + response.result.serviceType + ":" + response.result.ctrlIndex, response.result.data);
     }
 }
 

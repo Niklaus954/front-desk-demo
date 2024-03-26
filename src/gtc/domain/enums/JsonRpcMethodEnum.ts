@@ -4,6 +4,9 @@ import {JsonRpcEventEnum} from "./JsonRpcEventEnum";
  * 远程调用方法
  */
 export enum JsonRpcMethodEnum {
+    CALL_GET_NODE_INFO = JsonRpcEventEnum.CALL + ".getNodeInfo",
+    REPLY_GET_NODE_INFO = JsonRpcEventEnum.REPLY + ".getNodeInfo",
+
     EVENT_LOG = JsonRpcEventEnum.EVENT + ".log",
     DATAGRAM_LIVE_DATA = JsonRpcEventEnum.DATAGRAM + ".liveData",
     DATAGRAM_ANALYZE_DATA = JsonRpcEventEnum.DATAGRAM + ".analyzeData",

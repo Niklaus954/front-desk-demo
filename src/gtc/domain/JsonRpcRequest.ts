@@ -10,4 +10,5 @@ export interface JsonRpcRequest<T> {
     params: T;
     timestamp: number;
     event: JsonRpcEventEnum;
+    slaveInstId: string | null;
 }

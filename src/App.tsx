@@ -29,11 +29,13 @@ import {ServiceTypeEnum} from "./gtc/domain/enums/ServiceTypeEnum";
 setupIonicReact();
 
 // GtcClient.init("http://localhost:9001").then(async () => {
-//   console.log(await GtcClient.getDllVer(ServiceTypeEnum.MGT));
-//   console.log(await GtcClient.getCardNumber(ServiceTypeEnum.MGT));
-//   GtcClient.listenEventMsg(ServiceTypeEnum.MGT, 0, result => console.log(result));
-//   GtcClient.listenDataGram(ServiceTypeEnum.MGT, 0, result => console.log(result));
-//   await GtcClient.launch(ServiceTypeEnum.MGT, 0);
+//   const slaveInstId = null;
+//   console.log(await GtcClient.getDllVer(slaveInstId, ServiceTypeEnum.MGT));
+//   console.log(await GtcClient.getCardNumber(slaveInstId, ServiceTypeEnum.MGT));
+//   GtcClient.listenEventMsg(slaveInstId, ServiceTypeEnum.MGT, 0, result => console.log(result));
+//   GtcClient.listenDataGram(slaveInstId, ServiceTypeEnum.MGT, 0, result => console.log(result));
+//   await GtcClient.launch(slaveInstId, ServiceTypeEnum.MGT, 0);
+//   GtcClient.listenNodeInfo(info => console.log(info));
 // }).catch(e => console.log(e));
 
 const App: React.FC = () => (
