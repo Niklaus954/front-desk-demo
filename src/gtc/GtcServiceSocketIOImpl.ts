@@ -24,31 +24,9 @@ class GtcServiceSocketIOImpl implements IGtcService {
 
     constructor() {
         setInterval(() => {
-            if (this.connectStatus == ConnectStatusEnum.DISCONNECT) {
-                PubSubUtil.publish(SubKeyEnum.NODE_INFO_LIST_KEY, [{
-                    instId: '127.0.0.1',
-                    nodeStatus: this.connectStatus,
-                }]);
-                return;
-            }
-            this.call({
-                id: IdGenerator.generate(),
-                method: JsonRpcMethodEnum.CALL_GET_NODE_INFO,
-                params: {},
-                timestamp: Date.now(),
-                event: JsonRpcEventEnum.CALL
-            }).then(result => {
-                PubSubUtil.publish(SubKeyEnum.NODE_INFO_LIST_KEY, [{
-                    instId: '127.0.0.1',
-                    nodeStatus: this.connectStatus,
-                }, ...result.map(item => {
-                    return {
-                        instId: item,
-                        nodeStatus: ConnectStatusEnum.CONNECTED,
-                    };
-                })]);
-            });
+            this.fetchNodeInfo();
         }, 5000);
+        this.fetchNodeInfo();
     }
 
     init(url: string): Promise<boolean> {
@@ -118,6 +96,40 @@ class GtcServiceSocketIOImpl implements IGtcService {
     dataGram(response: JsonRpcResponse<OutMsg<ReadDataDO>, any>) {
         // 处理数据流
         PubSubUtil.publish(response.slaveInstId + ":" + SubKeyEnum.GTC_DATA_GRAM_KEY + ":" + response.result.serviceType + ":" + response.result.ctrlIndex, response.result.data);
+    }
+
+    fetchNodeInfo(): Promise<Array<NodeInfo>> {
+        return new Promise((resolve, reject) => {
+            let result = [{
+                instId: null,
+                nodeStatus: this.connectStatus,
+            }];
+            if (this.connectStatus == ConnectStatusEnum.DISCONNECT) {
+                PubSubUtil.publish(SubKeyEnum.NODE_INFO_LIST_KEY, result);
+                resolve(result);
+                return;
+            }
+            this.call({
+                id: IdGenerator.generate(),
+                method: JsonRpcMethodEnum.CALL_GET_NODE_INFO,
+                params: {},
+                timestamp: Date.now(),
+                event: JsonRpcEventEnum.CALL,
+                slaveInstId: null,
+            }).then(result => {
+                result = [{
+                    instId: null,
+                    nodeStatus: this.connectStatus,
+                }, ...result.map(item => {
+                    return {
+                        instId: item,
+                        nodeStatus: ConnectStatusEnum.CONNECTED,
+                    };
+                })];
+                PubSubUtil.publish(SubKeyEnum.NODE_INFO_LIST_KEY, result);
+                resolve(result);
+            });
+        });
     }
 }
 

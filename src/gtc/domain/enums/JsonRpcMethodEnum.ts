@@ -20,6 +20,8 @@ export enum JsonRpcMethodEnum {
     CALL_GET_SWITCH_LIST = JsonRpcEventEnum.CALL + ".getSwitchList",
     REPLY_GET_DIGITAL_LIST = JsonRpcEventEnum.REPLY + ".getDigitalList",
     REPLY_GET_SWITCH_LIST = JsonRpcEventEnum.REPLY + ".getSwitchList",
+    CALL_GET_VIN_CHNLS = JsonRpcEventEnum.CALL + ".getVinChnls",
+    REPLY_GET_VIN_CHNLS = JsonRpcEventEnum.REPLY + ".getVinChnls",
     CALL_SET_REF_GEN_SLOPE= JsonRpcEventEnum.CALL + ".setRefGenSlope",
     REPLY_SET_REF_GEN_SLOPE = JsonRpcEventEnum.REPLY + ".setRefGenSlope",
     CALL_OPEN_LOOP_STOP = JsonRpcEventEnum.CALL + ".openLoopStop",

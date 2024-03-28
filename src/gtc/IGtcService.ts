@@ -1,6 +1,7 @@
 import './lib/socketio';
 import {JsonRpcRequest} from "./domain/JsonRpcRequest";
 import {JsonRpcResponse} from "./domain/JsonRpcResponse";
+import {NodeInfo} from "./domain/NodeInfo";
 
 /**
  * 远程gtc服务接口
@@ -15,6 +16,8 @@ interface IGtcService {
     event(response: JsonRpcResponse<any, any>);
 
     dataGram(response: JsonRpcResponse<any, any>);
+
+    fetchNodeInfo(): Promise<Array<NodeInfo>>;
 }
 
 export default IGtcService;

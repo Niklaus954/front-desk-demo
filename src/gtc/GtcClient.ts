@@ -11,6 +11,7 @@ import {PubSubUtil} from "./utils/PubSubUtil";
 import {SubKeyEnum} from "./utils/enums/SubKeyEnum";
 import {ReadDataDO} from "./domain/ReadDataDO";
 import {NodeInfo} from "./domain/NodeInfo";
+import {VinChnl} from "./domain/VinChnl";
 
 /**
  * 提供给前端接口调用
@@ -42,6 +43,13 @@ export class GtcClient {
      */
     public static listenNodeInfo(fn: (result: Array<NodeInfo>) => void): void {
         PubSubUtil.subscribe(SubKeyEnum.NODE_INFO_LIST_KEY, fn);
+    }
+
+    /**
+     * 获取节点信息
+     */
+    public static fetchNodeInfo(): Promise<Array<NodeInfo>> {
+        return GtcServiceFactory.getGtcService().fetchNodeInfo();
     }
 
     /**
@@ -162,6 +170,20 @@ export class GtcClient {
      */
     public static async getSwitchList(slaveInstId: string | null, serviceType: ServiceTypeEnum, ctrlIndex: number): Promise<string[]> {
         const request: JsonRpcRequest<any> = GtcClient.generateRequest(JsonRpcMethodEnum.CALL_GET_SWITCH_LIST, slaveInstId);
+        request.params[JsonRpcConstant.SERVICE_TYPE] = serviceType;
+        request.params[JsonRpcConstant.CTRL_INDEX] = ctrlIndex;
+        return GtcServiceFactory.getGtcService().call(request);
+    }
+
+    /**
+     * 获取通道列表
+     *
+     * @param slaveInstId   从机id
+     * @param serviceType   服务类型
+     * @param ctrlIndex     卡索引
+     */
+    public static async getVinChannels(slaveInstId: string | null, serviceType: ServiceTypeEnum, ctrlIndex: number): Promise<Array<VinChnl>> {
+        const request: JsonRpcRequest<any> = GtcClient.generateRequest(JsonRpcMethodEnum.CALL_GET_VIN_CHNLS, slaveInstId);
         request.params[JsonRpcConstant.SERVICE_TYPE] = serviceType;
         request.params[JsonRpcConstant.CTRL_INDEX] = ctrlIndex;
         return GtcServiceFactory.getGtcService().call(request);
@@ -360,7 +382,7 @@ export class GtcClient {
      * @param atsHandle     ats句柄
      * @param buttonCode    按钮编码
      */
-    public static async atsPushButton(slaveInstId: string | null, serviceType: ServiceTypeEnum, ctrlIndex: number, atsHandle: number, buttonCode: number): Promise<null> {
+    public static async atsPushButton(slaveInstId: string | null, serviceType: ServiceTypeEnum, ctrlIndex: number, atsHandle: number, buttonCode: string): Promise<null> {
         const request: JsonRpcRequest<any> = GtcClient.generateRequest(JsonRpcMethodEnum.CALL_ATS_PUSH_BUTTON, slaveInstId);
         request.params[JsonRpcConstant.SERVICE_TYPE] = serviceType;
         request.params[JsonRpcConstant.CTRL_INDEX] = ctrlIndex;
