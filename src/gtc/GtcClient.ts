@@ -12,6 +12,7 @@ import {SubKeyEnum} from "./utils/enums/SubKeyEnum";
 import {ReadDataDO} from "./domain/ReadDataDO";
 import {NodeInfo} from "./domain/NodeInfo";
 import {VinChnl} from "./domain/VinChnl";
+import {OutMsg} from "./domain/OutMsg";
 
 /**
  * 提供给前端接口调用
@@ -72,7 +73,7 @@ export class GtcClient {
      * @param ctrlIndex     卡索引
      * @param fn            回调函数
      */
-    public static listenDataGram(slaveInstId: string | null, serviceType: ServiceTypeEnum, ctrlIndex: number, fn: (result: ReadDataDO) => void): void {
+    public static listenDataGram(slaveInstId: string | null, serviceType: ServiceTypeEnum, ctrlIndex: number, fn: (result: OutMsg<ReadDataDO>) => void): void {
         PubSubUtil.subscribe(slaveInstId + ":" + SubKeyEnum.GTC_DATA_GRAM_KEY + ":" + serviceType + ":" + ctrlIndex, fn);
     }
 

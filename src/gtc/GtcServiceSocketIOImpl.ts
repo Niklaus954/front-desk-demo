@@ -95,7 +95,7 @@ class GtcServiceSocketIOImpl implements IGtcService {
 
     dataGram(response: JsonRpcResponse<OutMsg<ReadDataDO>, any>) {
         // 处理数据流
-        PubSubUtil.publish(response.slaveInstId + ":" + SubKeyEnum.GTC_DATA_GRAM_KEY + ":" + response.result.serviceType + ":" + response.result.ctrlIndex, response.result.data);
+        PubSubUtil.publish(response.slaveInstId + ":" + SubKeyEnum.GTC_DATA_GRAM_KEY + ":" + response.result.serviceType + ":" + response.result.ctrlIndex, response.result);
     }
 
     fetchNodeInfo(): Promise<Array<NodeInfo>> {
