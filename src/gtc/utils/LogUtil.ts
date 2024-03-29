@@ -9,7 +9,7 @@ export class LogUtil {
         LogUtil.LOG_SOURCE.push(msg);
         // 订阅一些重要消息，统一发布
         console.log(msg);
-        console.log(ctrlIndex + "<<>>" + msg.msgId.toString(16));
+        // console.log(ctrlIndex + "<<>>" + msg.msgId.toString(16));
         if (msg.msgId === 0x2000) {
             PubSubUtil.publish(SubKeyEnum.LAUNCH_OK, { instId, ctrlIndex });
         } else if (msg.msgId >= 0x0620 && msg.msgId < 0x0630) {

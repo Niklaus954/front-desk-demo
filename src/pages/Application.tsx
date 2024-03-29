@@ -11,14 +11,11 @@ import {ProductInfo} from "../gtc/domain/ProductInfo";
 import {VinChnl} from "../gtc/domain/VinChnl";
 import {TaskSynchronizer} from "../gtc/utils/TaskSynchronizer";
 import {NodeInfo} from "../gtc/domain/NodeInfo";
+import {DataGramUtil} from "../gtc/utils/DataGramUtil";
 
 class Application extends React.Component {
 
     private serverUrl: string = 'http://localhost:9001';
-
-    private totalChannelNum: number = 0;
-
-    private markCount: number = 0;
 
     private nodeInfoList: NodeInfo[];
 
@@ -27,22 +24,6 @@ class Application extends React.Component {
 
     // instId-ctrlIndex: channelList
     private channelListMap = {};
-
-    // instId-ctrlIndex: timeList
-    private timeSnapshotMap = new Proxy({}, {
-        set: (target, propKey, value, receiver) => {
-            const result = Reflect.set(target, propKey, value, receiver);
-            this.markCount++;
-            if (this.markCount === this.totalChannelNum) {
-                this.markCount = 0;
-                PubSubUtil.publish(SubKeyEnum.NEW_DATA_REFRESH, {
-                    channelListMap: this.channelListMap,
-                    timeSnapshotMap: this.timeSnapshotMap,
-                });
-            }
-            return result;
-        }
-    });
 
     // instId-ctrlIndex: atsHandle
     private atsHandleMap = {};
@@ -54,6 +35,7 @@ class Application extends React.Component {
         for (const node of this.nodeInfoList.filter(node => node.nodeStatus == ConnectStatusEnum.CONNECTED)) {
             // 遍历节点，获取卡的数量
             const cardNum = await GtcClient.getCardNumber(node.instId, ServiceTypeEnum.MGT);
+            DataGramUtil.initSize(node.instId, cardNum);
             for (let i = 0; i < cardNum; i++) {
                 // 挨个启动控制器
                 GtcClient.listenEventMsg(node.instId, ServiceTypeEnum.MGT, i, result => LogUtil.receive(node.instId, i, result));
@@ -69,24 +51,8 @@ class Application extends React.Component {
             this.deviceNameMap[key] = productInfo.device;
             // 初始化通道信息
             this.channelListMap[key] = await GtcClient.getVinChannels(eventMsg.instId, ServiceTypeEnum.MGT, eventMsg.ctrlIndex);
-            this.timeSnapshotMap[key] = [];
-            this.channelListMap[key].forEach(() => this.totalChannelNum++);
             // 监听通道实时数据
-            GtcClient.listenDataGram(eventMsg.instId, ServiceTypeEnum.MGT, eventMsg.ctrlIndex, result => {
-                for (let i = 0; i < result.ChannelList.length; i++) {
-                    const liveChannel: VinChnl = result.ChannelList[i];
-                    for (let j = 0; j < this.channelListMap[key].length; j++) {
-                        const c: VinChnl = this.channelListMap[key][j];
-                        if (liveChannel.Caption === c.Caption) {
-                            // 通道示值赋值
-                            this.channelListMap[key][j] = liveChannel;
-                            this.timeSnapshotMap[key] = result.TimeArr;
-                            break;
-                        }
-                    }
-                }
-                // console.log(result);
-            });
+            GtcClient.listenDataGram(eventMsg.instId, ServiceTypeEnum.MGT, eventMsg.ctrlIndex, result => DataGramUtil.receive(eventMsg.instId, result));
             taskSynchronizer.finishTaskKey(key);
         });
         await taskSynchronizer.waitAll();
