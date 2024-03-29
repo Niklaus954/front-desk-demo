@@ -1,0 +1,13 @@
+.chart1{
+    height: 50%;
+    width: 100%;
+    top: 0;
+    right: 0;
+}
+.chart2{
+    height: 50%;
+    width: 50%;
+    bottom: 0;
+    right: 0;
+    background: #000;
+}
