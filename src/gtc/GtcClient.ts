@@ -110,7 +110,7 @@ export class GtcClient {
      * @param serviceType 服务类型
      * @param ctrlIndex   卡索引
      */
-    public static async launch(slaveInstId: string | null, serviceType: ServiceTypeEnum, ctrlIndex: number): Promise<null> {
+    public static async launch(slaveInstId: string | null, serviceType: ServiceTypeEnum, ctrlIndex: number): Promise<boolean> {
         const request: JsonRpcRequest<any> = GtcClient.generateRequest(JsonRpcMethodEnum.CALL_LAUNCH, slaveInstId);
         request.params[JsonRpcConstant.SERVICE_TYPE] = serviceType;
         request.params[JsonRpcConstant.CTRL_INDEX] = ctrlIndex;
