@@ -78,6 +78,7 @@
         border: 1px solid #5f6062;
         background: #c6cacd;
         margin:0 5px;
+
         .center-row{
             margin: 15px 0;
         }
@@ -106,6 +107,10 @@
         .handle-center{
             border: 2px solid #fdd500;
             color: #fdd500;
+        }
+        .check-btn{
+            border: 2px solid #32cb32;
+            color: #32cb32;
         }
     }
     .footBtn {

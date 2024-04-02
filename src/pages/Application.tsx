@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {GtcClient} from "../gtc/GtcClient";
 import {ServiceTypeEnum} from "../gtc/domain/enums/ServiceTypeEnum";
 import {Spin} from "antd";
@@ -12,7 +12,9 @@ import {VinChnl} from "../gtc/domain/VinChnl";
 import {TaskSynchronizer} from "../gtc/utils/TaskSynchronizer";
 import {NodeInfo} from "../gtc/domain/NodeInfo";
 import {DataGramUtil} from "../gtc/utils/DataGramUtil";
-import {AxisScrollStrategies, lightningChart, Themes} from "@arction/lcjs";
+import {AxisScrollStrategies, emptyFill, lightningChart, Themes} from "@arction/lcjs";
+import ExampleContainer from "./LightningChartTestDemo";
+import RemoteControl from "../components/RemoteControl";
 
 class Application extends React.Component {
 
@@ -28,7 +30,19 @@ class Application extends React.Component {
 
     // instId-ctrlIndex: atsHandle
     private atsHandleMap = {};
-
+    constructor(props) {
+        super(props);
+        this.state = { channelListR: [],channelScreen:{} };
+        this.setChannelListR = this.setChannelListR.bind(this);
+        this.setChannelScreen = this.setChannelScreen.bind(this);
+    }
+    setChannelListR(vaule){
+        this.setState({channelListR:vaule})
+    }
+    setChannelScreen(vaule){
+        this.setState({channelScreen:vaule})
+    }
+    // private channelListR:Array<any> = []
     private async discoverLaunchAll() {
         // 获取已连接的节点信息
         this.nodeInfoList = await GtcClient.fetchNodeInfo();
@@ -42,9 +56,16 @@ class Application extends React.Component {
                 GtcClient.listenEventMsg(node.instId, ServiceTypeEnum.MGT, i, result => LogUtil.receive(node.instId, i, result));
                 // 监听通道实时数据
                 GtcClient.listenDataGram(node.instId, ServiceTypeEnum.MGT, i, result => DataGramUtil.receive(node.instId, result));
-                GtcClient.launch(node.instId, ServiceTypeEnum.MGT, i).then(alreadyStart => {
+                GtcClient.launch(node.instId, ServiceTypeEnum.MGT, i).then(async alreadyStart =>{
+                    console.log(alreadyStart)
                     if (alreadyStart) {
-                        taskSynchronizer.finishTaskKey(node.instId + '-' + i);
+                        // 获取控制器产品信息
+                        const productInfo: ProductInfo = await GtcClient.getProductInfo(node.instId, ServiceTypeEnum.MGT, i);
+                        const key = node.instId + '-' + i;
+                        this.deviceNameMap[key] = productInfo.device;
+                        // 初始化通道信息
+                        this.channelListMap[key] = await GtcClient.getVinChannels(node.instId, ServiceTypeEnum.MGT, i);
+                        taskSynchronizer.finishTaskKey(key);
                     }
                 });
                 taskSynchronizer.addTaskKey(node.instId + '-' + i);
@@ -52,6 +73,7 @@ class Application extends React.Component {
         }
         // 控制器启动成功回调
         PubSubUtil.subscribe(SubKeyEnum.LAUNCH_OK, async eventMsg => {
+            console.log(eventMsg)
             // 获取控制器产品信息
             const productInfo: ProductInfo = await GtcClient.getProductInfo(eventMsg.instId, ServiceTypeEnum.MGT, eventMsg.ctrlIndex);
             const key = eventMsg.instId + '-' + eventMsg.ctrlIndex;
@@ -61,6 +83,8 @@ class Application extends React.Component {
             taskSynchronizer.finishTaskKey(key);
         });
         await taskSynchronizer.waitAll();
+        // this.channelListR = [];
+        this.setChannelListR([])
         console.log("Application初始化完成，可以开始做试验了");
     }
 
@@ -113,26 +137,28 @@ class Application extends React.Component {
         PubSubUtil.subscribe(SubKeyEnum.ATS_TERMINATE, async eventMsg => {
             // alert(eventMsg.instId + "试验结束");
         });
-        const { series: loadSeries } = this.InitChart(document.getElementById('loadChart111'), '载荷-时间曲线', '时间(s)', '载荷(kN)');
-        // 订阅新数据流
-        PubSubUtil.subscribe(SubKeyEnum.NEW_DATA_REFRESH, async data => {
-            // console.log(data.channelListMap[null + '-0'][0].LastVal + "<<>>" + data.channelListMap[null + '-0'][1].LastVal + "<<>>" + data.channelListMap[null + '-0'][2].LastVal);
-
-            let channel;
-            for (const key in data.channelListMap) {
-                if (data.channelListMap[key].length === 3) {
-                    channel = data.channelListMap[key][0];
-                }
-            }
-            const timeArr = data.timeSnapshotMap[null + '-0'];
-            const snapshotValArray = channel.SnapshotValArray;
-            for (let i = 0; i < snapshotValArray.length; i++) {
-                loadSeries.add({
-                    x: timeArr[i],
-                    y: snapshotValArray[i],
-                });
-            }
-        });
+        console.log(this.channelListMap)
+        // const { series: loadSeries } = this.InitChart(document.getElementById('loadChart111'), '载荷-时间曲线', '时间(s)', '载荷(kN)');
+        // // 订阅新数据流
+        // PubSubUtil.subscribe(SubKeyEnum.NEW_DATA_REFRESH, async data => {
+        //     // console.log(data.channelListMap[null + '-0'][0].LastVal + "<<>>" + data.channelListMap[null + '-0'][1].LastVal + "<<>>" + data.channelListMap[null + '-0'][2].LastVal);
+        //
+        //     let channel;
+        //     for (const key in data.channelListMap) {
+        //         if (data.channelListMap[key].length === 3) {
+        //             channel = data.channelListMap[key][0];
+        //         }
+        //     }
+        //     const timeArr = data.timeSnapshotMap[null + '-0'];
+        //     const snapshotValArray = channel.SnapshotValArray;
+        //     for (let i = 0; i < snapshotValArray.length; i++) {
+        //         loadSeries.add({
+        //             x: timeArr[i],
+        //             y: snapshotValArray[i],
+        //         });
+        //     }
+        // });
+        this.CreatDefaultChart()
         await this.loadAts();
     }
 
@@ -170,9 +196,94 @@ class Application extends React.Component {
         };
     }
 
+
+    CreatDefaultChart(){
+        let start = 0
+        let step = 2
+        let end = start + step
+        let box = new ExampleContainer("")
+        const exampleContainer = document.getElementById('chart')
+        let aChart =  box.creatChartXY(exampleContainer as HTMLDivElement,"滚动")
+        box.setAxisStrategy(aChart,{
+            name:"Time",
+                scrollStrategy:"progressive",
+                interval:{start:start,end:end,stopAxisAfter:false},
+            defaultInterval:{start:start,end:end,state:"dataMax",stopAxisAfter:false},
+        },
+        {
+            name:"SnapshotVal",
+                scrollStrategy:"fitting",
+                interval:{start:0,end:10,stopAxisAfter:false},
+            defaultInterval:{start:0,end:10,stopAxisAfter:false}
+        })
+        // console.log(this.channelListMap)
+        let channelList = this.channelListMap
+        let seriesMap = {}
+        let channelListR= []
+        for (const key in channelList) {
+            channelList[key].forEach(channel=>{
+                channelListR.push({
+                    caption:channel.Caption,
+                    bindHandle:channel.BindHandle,
+                    instId:key
+                })
+                let lineSeries = box.setSeriesStrategy(aChart,channel.Caption,500000000)
+                seriesMap[key+'-'+channel.BindHandle] = lineSeries
+            })
+        }
+        this.setChannelListR(channelListR)
+        PubSubUtil.subscribe(SubKeyEnum.NEW_DATA_REFRESH, async data => {
+            // console.log(data)
+            for (const key in data.channelListMap) {
+                const timeArr = data.timeSnapshotMap[key];
+                let channelList = data.channelListMap[key]
+                for (let i = 0; i < timeArr.length; i++) {
+                    let channelScreenT = this.state.channelScreen
+                    channelList.forEach(channel=>{
+                        const snapshotValArray = channel.SnapshotValArray;
+                        seriesMap[key+'-'+channel.BindHandle].add({
+                            x: timeArr[i],
+                            y: snapshotValArray[i],
+                        });
+                        channelScreenT[key+'-'+channel.BindHandle] = snapshotValArray[i]
+                    })
+                    this.setChannelScreen(channelScreenT)
+                }
+                // channelList.forEach(channel=>{
+                //     const snapshotValArray = channel.SnapshotValArray;
+                //     for (let i = 0; i < snapshotValArray.length; i++) {
+                //         seriesMap[key+'-'+channel.BindHandle].add({
+                //             x: timeArr[i],
+                //             y: snapshotValArray[i],
+                //         });
+                //     }
+                // })
+            }
+        });
+        //Legend要在Series后添加
+        const legend = aChart
+            .addLegendBox() //(LegendBoxBuilders.HorizontalLegendBox)
+            .setTitleFillStyle(emptyFill)
+            .add(aChart)
+            .setAutoDispose({
+                type: 'max-width',
+                maxWidth: 0.3,
+            })
+
+        // const exampleContainer2 = document.getElementById('chart2')
+        // aChart.craetChartXY(exampleContainer2 as HTMLDivElement,"清屏")
+    }
+
     render() {
         return (
-            <div id="loadChart111" style={{width: 600, height: 600}}></div>
+            <>
+                <ExampleContainer/>
+                <div id='chart' className="chart1"></div>
+                <RemoteControl channel={this.state.channelListR} channelScreen={this.state.channelScreen}></RemoteControl>
+                {/*<div id='chart2' className="chart2"></div>*/}
+            </>
+
+        // <div id="loadChart111" style={{width: 600, height: 600}}></div>
             // <div id="loadChart111" style="width: 500px;height: 300px;">
             //
             // </div>

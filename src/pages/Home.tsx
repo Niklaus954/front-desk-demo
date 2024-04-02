@@ -5,6 +5,7 @@ import RemoteControl from "../components/RemoteControl";
 import React from "react";
 import {Button} from 'antd'
 import LightningDemo from "../pages/LightningChartTestDemo"
+import Application from "./Application";
 import {Route, BrowserRouter, Switch, Link} from 'react-router-dom'
 
 const Home: React.FC = () => {
@@ -22,8 +23,9 @@ const Home: React.FC = () => {
           </IonToolbar>
         </IonHeader>
         {/*<ExploreContainer />*/}
-          <RemoteControl />
-          <Button><Link to="/LCDemo">toLCDemo</Link></Button>
+        {/*  <RemoteControl />*/}
+        {/*  <Application />*/}
+          {/*<Button><Link to="/application">toDemo</Link></Button>*/}
       </IonContent>
     </IonPage>
   );
